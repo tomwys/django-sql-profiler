@@ -1,0 +1,3 @@
+{% for profile in profiles %}
+<a href="{% url "profile_detail" profile %}">{{profile}}</a><br>
+{% endfor %}
