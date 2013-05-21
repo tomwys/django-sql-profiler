@@ -105,4 +105,4 @@ class RedisStorage(object):
         self.connection.sadd('profile_versions', version)
 
     def get_versions(self):
-        return self.connection.smembers('profile_versions')
+        return sorted(self.connection.smembers('profile_versions'))
