@@ -1,4 +1,5 @@
 from collections import defaultdict
+import os.path
 
 from django import http
 from django.contrib.auth.decorators import permission_required
@@ -88,7 +89,7 @@ class ProfileKCacheGrind(generic.View):
             function = self._get_function_from_call(call[0])
             self._add_function_header(result, function)
             calle = self._get_function_from_call(call[1])
-            result.append("cfl=%s" % calle[0])
+            result.append("cfl=%s" % self._get_relative_path(calle[0]))
             result.append("cfn=%s" % calle[1])
             result.append("calls=%d %d" % (value[1], self.function_locations[calle]))
             result.append("%d %d" % (call[0][1], 1000*value[0]))
@@ -96,7 +97,21 @@ class ProfileKCacheGrind(generic.View):
         return "\n".join(result)
 
     def _add_function_header(self, result, function):
-        result.append("fl=%s" % function[0])
+        result.append("fl=%s" % self._get_relative_path(function[0]))
         result.append("fn=%s" % function[1])
+
+    def _get_relative_path(self, path):
+        tails = []
+        head = path
+        tail = ''
+        while True:
+            head, tail = os.path.split(head)
+            if tail in ['site-packages', 'dist-packages'] or head == '/home':
+                break
+            tails.insert(0, tail)
+            if head == '/':
+                tails.insert(0, head)
+                break
+        return os.path.join(*tails)
 
 profile_detail = permission_required('profile')(ProfileKCacheGrind.as_view())
