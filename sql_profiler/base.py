@@ -2,6 +2,7 @@ from collections import defaultdict
 import copy
 from datetime import datetime
 from datetime import timedelta
+import logging
 from functools import wraps
 import os
 import pickle
@@ -11,6 +12,8 @@ from django.db.backends.postgresql_psycopg2 import base
 from django.conf import settings
 
 import redis
+
+logger = logging.getLogger(__name__)
 
 redis_connection_pool = redis.ConnectionPool(
     host=getattr(settings, 'REDIS_HOST', 'localhost'),
@@ -22,9 +25,13 @@ def get_fallback_version():
     return os.path.dirname(__file__)
 
 def get_storage(version=os.environ.get('APP_VERSION', get_fallback_version())):
-    connection = redis.Redis(connection_pool=redis_connection_pool)
-    storage = RedisStorage(connection, version)
-    storage.add_version(version)
+    try:
+        connection = redis.Redis(connection_pool=redis_connection_pool)
+        storage = RedisStorage(connection, version)
+        storage.add_version(version)
+    except redis.ConnectionError:
+        logger.warning("Can't send profile to redis.")
+        return DummyStorage()
     return storage
 
 
@@ -52,6 +59,23 @@ class CursorWrapper(base.CursorWrapper):
             self.profile_storage.store_call(traceback.extract_stack(), end - start)
             return result
         return wrapper
+
+
+class DummyStorage(object):
+    def store_call(self, *args, **kwargs):
+        pass
+
+    def get_count(self):
+        return {}
+
+    def get_time(self):
+        return {}
+
+    def add_version(self, *args, **kwargs):
+        pass
+
+    def get_versions(self):
+        return []
 
 
 class RedisStorage(object):
