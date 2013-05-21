@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='django-sql-profiler',
-    version='0.1',
+    version='0.1.1',
     description="Sql profiler for PostgreSQL Django backend.",
     maintainer="Tomasz Wysocki",
     maintainer_email="tomasz@wysocki.info",

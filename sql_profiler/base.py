@@ -18,7 +18,10 @@ redis_connection_pool = redis.ConnectionPool(
     db=getattr(settings, 'REDIS_PROFILE_DB', 0),
 )
 
-def get_storage(version=os.environ['APP_VERSION']):
+def get_fallback_version():
+    return os.path.dirname(__file__)
+
+def get_storage(version=os.environ.get('APP_VERSION', get_fallback_version())):
     connection = redis.Redis(connection_pool=redis_connection_pool)
     storage = RedisStorage(connection, version)
     storage.add_version(version)
