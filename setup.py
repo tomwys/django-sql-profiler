@@ -10,4 +10,5 @@ setup(
     maintainer_email="tomasz@wysocki.info",
     packages=find_packages(),
     include_package_data=True,
+    install_requires=('redis',),
 )
